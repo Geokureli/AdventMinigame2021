@@ -115,12 +115,16 @@ class PlayState extends FlxState
 		}
 
 		if (dead && Controls.pressed.A)
-		{
-			FlxG.sound.music = null;
-			loseJingle.stop();
-			Global.resetState();
-		}
+			resetState();
+		
 		super.update(elapsed);
+	}
+	
+	function resetState()
+	{
+		FlxG.sound.music = null;
+		loseJingle.stop();
+		Global.resetState();
 	}
 
 	function executeYetiKill(player:Player, y:Yeti)
@@ -148,13 +152,16 @@ class PlayState extends FlxState
 			loseText.screenCenter();
 			loseText.color = tileSeq[iSpot];
 			add(loseText);
+			#if ADVENT
+			data.NGio.postPlayerHiscore("yeti", score);
+			#end
 
 			FlxTween.tween(loseText, {'scale.x': 1, 'scale.y': 1}, 0.4, {
 				onStart: (_) ->
 				{
 					loseText.visible = dead = true;
 				},
-				onUpdate: (_) -> if (Controls.pressed.A) Global.resetState(),
+				// onUpdate: (_) -> if (Controls.pressed.A) resetState(),
 				ease: FlxEase.quadIn
 			});
 
@@ -174,6 +181,14 @@ class PlayState extends FlxState
 				FlxG.sound.play(Global.asset('assets/sounds/win_jingle.mp3'), 0.5);
 				yeti.animation.play('freeze', true);
 				score += multiplier;
+				#if ADVENT
+				if (score > 40)
+					data.NGio.unlockMedalByName('yeti_doctorate');
+				else if (score > 30)
+					data.NGio.unlockMedalByName('yeti_masters_degree');
+				else if (score > 15)
+					data.NGio.unlockMedalByName('yeti_degree');
+				#end
 				lightShowTime += 0.05;
 				multiplier++;
 
